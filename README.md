@@ -31,6 +31,16 @@ assume a regular grid. Harmonic regression estimates a selected model, while a
 spectrum evaluates many candidate frequencies and therefore requires care about
 multiple testing and noise color.
 
+Turning-point analysis is available through the independent STPD-style API:
+
+```python
+result = tanin.stpd(time, displacement)
+```
+
+It estimates connected piecewise-linear trends and sequentially selects
+turning points. The implementation is intended for irregular geodetic series
+and is validated with synthetic examples in `tests/test_stpd.py`.
+
 ## Citation
 
 If you use Tanin in research, please cite the software repository:
@@ -49,3 +59,5 @@ Tanin's scientific methods are informed by:
   *Journal of Geophysical Research: Solid Earth*, 112, B07413.
 - Ghaderpour, E. (2019–2021). LSWAVE / JUST signal-processing packages.
   https://github.com/Ghaderpour/LSWAVE-SignalProcessing
+- Ghaderpour, E., et al. (2023). A fast and robust method for detecting trend
+  turning points in InSAR displacement time series. *Computers & Geosciences*.
