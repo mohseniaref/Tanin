@@ -18,3 +18,9 @@ def test_cross_jump_decompose_monitor():
     assert "alarms" in tanin.just_monitor(y,t,window=10)
     wave = tanin.lscwa(x, y, t, periods=np.array([60.]))
     assert wave["cross_power"].shape == (1, len(t))
+
+def test_joint_just_jump_detection():
+    t=np.arange(0.,500.,5.); y=0.002*t+np.cos(2*np.pi*t/365.25); y[t>=245]+=2.
+    result=tanin.just_jumps(y,t,periods=(365.25,),max_jumps=3,alpha=1e-5)
+    assert np.min(np.abs(result["times"]-245)) < 10
+    assert result["steps"][np.argmin(np.abs(result["times"]-245))] > 1

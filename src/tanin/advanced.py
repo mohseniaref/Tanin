@@ -6,6 +6,7 @@ but do not copy their source code. They are intentionally small and composable.
 import numpy as np
 import xarray as xr
 from scipy.optimize import minimize_scalar
+from scipy.stats import f
 from .harmonic import _fit_1d
 from .spectrum import _periods, _spec
 
@@ -69,9 +70,43 @@ def detect_jumps(y,t=None,threshold=5.0):
     y=np.asarray(y,float); t=np.arange(len(y),dtype=float) if t is None else np.asarray(t,float); d=np.diff(y); med=np.nanmedian(d); scale=1.4826*np.nanmedian(np.abs(d-med)); scale=max(scale,np.finfo(float).eps); idx=np.flatnonzero(np.abs(d-med)>threshold*scale)+1
     return {"indices":idx,"times":t[idx],"step_estimates":d[idx-1]-med,"scale":scale}
 
+def just_jumps(y, t=None, periods=(), max_jumps=5, alpha=0.01, min_separation=None):
+    """Iterative joint trend/seasonal step detection.
+
+    Candidate steps are columns ``I(t >= tau)`` added to a least-squares
+    functional model. At each iteration the candidate with the largest nested
+    F statistic is selected if its p-value is below ``alpha``. This is an
+    independent, compact implementation of the JUSTjumps model-selection idea;
+    it is not a byte-for-byte reproduction of the original package.
+    """
+    y=np.asarray(y,float); t=np.arange(len(y),dtype=float) if t is None else np.asarray(t,float)
+    mask=np.isfinite(y)&np.isfinite(t); y,t=y[mask],t[mask]
+    order=np.argsort(t); t,y=t[order],y[order]; n=len(y)
+    if n < 8: raise ValueError("at least 8 finite observations are required")
+    periods=tuple(periods); center=t.mean(); base=np.column_stack((np.ones(n),t-center,*[z for p in periods for z in (np.cos(2*np.pi*t/p),np.sin(2*np.pi*t/p))]))
+    min_separation = min_separation if min_separation is not None else max(np.median(np.diff(t))*2, np.finfo(float).eps)
+    selected=[]; columns=[]; history=[]
+    for _ in range(max_jumps):
+        X0=np.column_stack((base,*columns)) if columns else base; b0=np.linalg.lstsq(X0,y,rcond=None)[0]; rss0=float(np.sum((y-X0@b0)**2)); candidates=[]
+        for i in range(2,n-2):
+            tau=float(t[i])
+            if any(abs(tau-q)<min_separation for q in selected): continue
+            step=(t>=tau).astype(float); X1=np.column_stack((X0,step)); b1=np.linalg.lstsq(X1,y,rcond=None)[0]; rss1=float(np.sum((y-X1@b1)**2)); df2=n-X1.shape[1]
+            if df2 <= 0: continue
+            statistic=((rss0-rss1)/1)/(rss1/df2); pvalue=float(f.sf(max(statistic,0),1,df2)); candidates.append((pvalue,statistic,tau,b1[-1],step,rss1))
+        if not candidates: break
+        pvalue,statistic,tau,step_size,step,rss1=min(candidates,key=lambda a:a[0])
+        if pvalue >= alpha: break
+        selected.append(tau); columns.append(step); history.append({"time":tau,"step":float(step_size),"statistic":float(statistic),"p_value":pvalue,"rss":rss1})
+    X=np.column_stack((base,*columns)) if columns else base; beta=np.linalg.lstsq(X,y,rcond=None)[0]; fitted=X@beta
+    return {"times":np.asarray(selected),"steps":np.asarray([h["step"] for h in history]),"p_values":np.asarray([h["p_value"] for h in history]),"statistics":np.asarray([h["statistic"] for h in history]),"fitted":fitted,"residuals":y-fitted,"history":history,"time":t}
+
 def just_decompose(y,t=None,periods=(365.25,), threshold=5.0):
     """Decompose into trend, selected seasonal terms, jumps, and remainder."""
-    y=np.asarray(y,float); t=np.arange(len(y),dtype=float) if t is None else np.asarray(t,float); fit=_fit_1d(t,y,periods); X=np.column_stack((np.ones(len(t)),t-t.mean(),*[z for p in periods for z in (np.cos(2*np.pi*t/p),np.sin(2*np.pi*t/p))])); model=X@fit["coefficients"]; jumps=detect_jumps(y-model,t,threshold); return {"trend":fit["coefficients"][0]+fit["coefficients"][1]*(t-t.mean()),"seasonal":model-(fit["coefficients"][0]+fit["coefficients"][1]*(t-t.mean())),"remainder":y-model,"jumps":jumps}
+    y=np.asarray(y,float); t=np.arange(len(y),dtype=float) if t is None else np.asarray(t,float); fit=_fit_1d(t,y,periods); baseline=fit["coefficients"][0]+fit["coefficients"][1]*(t-t.mean()); seasonal=np.zeros(len(t));
+    for i,p in enumerate(periods): seasonal += fit["coefficients"][2+2*i]*np.cos(2*np.pi*t/p)+fit["coefficients"][3+2*i]*np.sin(2*np.pi*t/p)
+    jumps=just_jumps(y,t,periods=periods,alpha=min(0.05,max(1e-6,1/(threshold**2))))
+    return {"trend":baseline,"seasonal":seasonal,"remainder":jumps["residuals"],"jumps":jumps,"fitted":jumps["fitted"]}
 
 def just_monitor(y,t=None,window=50,threshold=5.0):
     """Rolling robust jump monitor."""
