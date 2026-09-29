@@ -52,6 +52,8 @@ If you use Tanin in research, please cite the software repository:
 > series. GitHub. https://github.com/mohseniaref/Tanin
 
 Machine-readable citation metadata is available in [CITATION.cff](CITATION.cff).
+See the [user guide](docs/user_guide.md) for cube workflows and the [theory
+notes](docs/theory.md) for equations and uncertainty conventions.
 
 Tanin's scientific methods are informed by:
 
