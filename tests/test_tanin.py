@@ -25,3 +25,13 @@ def test_datetime_and_simulation():
     t=np.arange("2020-01-01","2020-01-10",dtype="datetime64[D]")
     assert np.isclose(tanin.to_decimal_days(t)[-1],8)
     assert tanin.simulate(t,harmonics=[(365.25,1,0)]).sizes["time"]==9
+
+def test_xarray_harmonic_result_and_covariance_test():
+    t=np.arange(0.,800.,10.); y=0.5*np.cos(2*np.pi*t/365.25)+np.random.default_rng(2).normal(0,.05,t.size)
+    da=xr.DataArray(np.stack([y,2*y]),dims=("site","time"),coords={"site":["a","b"],"time":t})
+    fit=tanin.fit_harmonics(da,periods=(365.25,),dim="time")
+    assert fit.coefficients.dims == ("site","coefficient")
+    assert fit.amplitude.dims == ("site","period")
+    covariance=np.eye(t.size)*.01
+    result=tanin.test_period(da.sel(site="a"),365.25,covariance=covariance)
+    assert bool(result.significant)

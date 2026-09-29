@@ -28,20 +28,25 @@ def _fit_1d(t, y, periods=(), weights=None, covariance=None, trend=True):
 def fit_harmonics(data, periods=(), dim="time", weights=None, trend=True):
     if not isinstance(data, xr.DataArray):
         t=np.arange(len(data), dtype=float); return _fit_1d(t, data, periods, weights, trend=trend)
-    t=to_decimal_days(data[dim].values)
+    t=to_decimal_days(data[dim].values); ncoef=2+2*len(periods)
     def f(y):
-        r=_fit_1d(t,y,periods,trend=trend); return np.array([r["coefficients"], *[r[f"amplitude_{p:g}"] for p in periods], *[r[f"phase_{p:g}"] for p in periods], r["rss"]], dtype=float)
-    ncoef=2+2*len(periods); names=[f"coef_{i}" for i in range(ncoef)]+[f"amplitude_{p:g}" for p in periods]+[f"phase_{p:g}" for p in periods]+["rss"]
-    out=xr.apply_ufunc(f,data,input_core_dims=[[dim]],output_core_dims=[[]],vectorize=True,dask="parallelized",output_dtypes=[float]).to_dataset(name="value")
-    return out.assign_coords(statistic=names).set_index(value="statistic") if False else out
+        r=_fit_1d(t,y,periods,weights=None if weights is None else np.asarray(weights),trend=trend)
+        return r["coefficients"], np.array([r[f"amplitude_{p:g}"] for p in periods]), np.array([r[f"phase_{p:g}"] for p in periods]), r["rss"], float(r["n_observations"])
+    inputs=[data] if weights is None else [data, weights]
+    core=[ [dim] ] if weights is None else [[dim],[dim]]
+    out=xr.apply_ufunc(f,*inputs,input_core_dims=core,output_core_dims=[["coefficient"],["period"],["period"],[],[]],vectorize=True,dask="parallelized",output_dtypes=[float]*5,dask_gufunc_kwargs={"output_sizes":{"coefficient":ncoef,"period":len(periods)}})
+    coeff,amp,phase,rss,nobs=out
+    coefficient_names=["intercept","trend"]+[name for p in periods for name in (f"cos_{p:g}",f"sin_{p:g}")]
+    period_values=np.asarray(periods,dtype=float)
+    return xr.Dataset({"coefficients":coeff.assign_coords(coefficient=coefficient_names),"amplitude":amp.assign_coords(period=period_values),"phase":phase.assign_coords(period=period_values),"rss":rss,"n_observations":nobs})
 
-def test_period(data, period, dim="time", weights=None):
+def test_period(data, period, dim="time", weights=None, covariance=None):
     if isinstance(data, xr.DataArray):
         t=to_decimal_days(data[dim].values)
-        def one(y): return _test(t,y,period,weights)
+        def one(y): return _test(t,y,period,weights,covariance)
         vals=xr.apply_ufunc(one,data,input_core_dims=[[dim]],output_core_dims=[[],[],[],[],[],[]],vectorize=True,dask="parallelized",output_dtypes=[float]*6)
         return xr.Dataset(dict(amplitude=vals[0],phase=vals[1],power=vals[2],statistic=vals[3],p_value=vals[4],significant=vals[5].astype(bool))).assign_attrs(phase_convention="atan2(-sine, cosine), phase of cosine-equivalent A cos(wt + phase)")
-    return _test(np.arange(len(data),dtype=float), data, period, weights)
+    return _test(np.arange(len(data),dtype=float), data, period, weights, covariance)
 
-def _test(t,y,period,weights=None):
-    null=_fit_1d(t,y,(),weights); alt=_fit_1d(t,y,(period,),weights); stat,p=nested_f_test(null["rss"],alt["rss"],alt["n_observations"],2); amp=alt[f"amplitude_{period:g}"]; return amp,alt[f"phase_{period:g}"],float((null["rss"]-alt["rss"])/max(null["rss"],np.finfo(float).eps)),stat,p,float(p<0.05)
+def _test(t,y,period,weights=None,covariance=None):
+    null=_fit_1d(t,y,(),weights,covariance); alt=_fit_1d(t,y,(period,),weights,covariance); stat,p=nested_f_test(null["rss"],alt["rss"],alt["n_observations"],2); amp=alt[f"amplitude_{period:g}"]; return amp,alt[f"phase_{period:g}"],float((null["rss"]-alt["rss"])/max(null["rss"],np.finfo(float).eps)),stat,p,float(p<0.05)
