@@ -29,3 +29,20 @@ references. The optional non-negative solver is included because unconstrained
 variance-component estimates can be negative. The flicker model is a finite-band
 1/f quadrature approximation and should be validated against domain-specific
 simulations before production use.
+
+The expanded LS-VCE workflow now includes a numeric time-series reader, public
+functional design-matrix utilities, a generic finite-band power-law covariance,
+component covariance/standard-error estimates, w-statistics, and iteration
+diagnostics. These are independent reproductions of the published equations;
+the local workspace contained the papers but not the Springer supplementary
+source archive, so no claim of byte-for-byte supplementary-code compatibility
+is made.
+
+Primary references:
+
+- Amiri-Simkooei, A. R., Tiberius, C. C. J. M., & Teunissen, P. J. G. (2007),
+  *Assessment of noise in GPS coordinate time series: Methodology and results*,
+  JGR Solid Earth 112, B07413, doi:10.1029/2006JB004913.
+- Teunissen, P. J. G., & Amiri-Simkooei, A. R. (2008), *Least-squares variance
+  component estimation*, Journal of Geodesy 82, 65–82,
+  doi:10.1007/s00190-007-0157-x.

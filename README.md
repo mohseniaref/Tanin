@@ -61,3 +61,11 @@ Tanin's scientific methods are informed by:
   https://github.com/Ghaderpour/LSWAVE-SignalProcessing
 - Ghaderpour, E., et al. (2023). A fast and robust method for detecting trend
   turning points in InSAR displacement time series. *Computers & Geosciences*.
+
+The LS-VCE workflow in `tanin.noise` is an independent implementation of the
+matrix equations in Amiri-Simkooei et al. (2007) and Teunissen &
+Amiri-Simkooei (2008). It includes a two-column time-series reader, design and
+step-matrix utilities, finite-band power-law covariance construction,
+component covariance/standard errors, non-negative estimation, w-statistics,
+and iteration diagnostics. See `examples/plot_lsvce_workflow.py` for a
+reproducible synthetic example.
