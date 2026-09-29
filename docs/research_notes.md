@@ -46,3 +46,7 @@ Primary references:
 - Teunissen, P. J. G., & Amiri-Simkooei, A. R. (2008), *Least-squares variance
   component estimation*, Journal of Geodesy 82, 65–82,
   doi:10.1007/s00190-007-0157-x.
+- Ghaderpour, E., Antonielli, B., Bozzano, F., Scarascia Mugnozza, G., &
+  Mazzanti, P. (2024), *A fast and robust method for detecting trend turning
+  points in InSAR displacement time series*, Computers & Geosciences 185,
+  105546, doi:10.1016/j.cageo.2024.105546.

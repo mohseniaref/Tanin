@@ -59,8 +59,10 @@ Tanin's scientific methods are informed by:
   *Journal of Geophysical Research: Solid Earth*, 112, B07413.
 - Ghaderpour, E. (2019–2021). LSWAVE / JUST signal-processing packages.
   https://github.com/Ghaderpour/LSWAVE-SignalProcessing
-- Ghaderpour, E., et al. (2023). A fast and robust method for detecting trend
-  turning points in InSAR displacement time series. *Computers & Geosciences*.
+- Ghaderpour, E., Antonielli, B., Bozzano, F., Scarascia Mugnozza, G., &
+  Mazzanti, P. (2024). A fast and robust method for detecting trend turning
+  points in InSAR displacement time series. *Computers & Geosciences*, 185,
+  105546. https://doi.org/10.1016/j.cageo.2024.105546
 
 The LS-VCE workflow in `tanin.noise` is an independent implementation of the
 matrix equations in Amiri-Simkooei et al. (2007) and Teunissen &
