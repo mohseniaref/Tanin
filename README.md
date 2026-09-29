@@ -22,6 +22,9 @@ import tanin
 annual = tanin.test_period(da, period=365.25, dim="time")
 spectrum = tanin.spectrum(da, min_period=30, max_period=1000, dim="time")
 dominant = tanin.dominant_period(spectrum)
+fit = tanin.fit_geodetic(da, dim="time")
+# fit contains intercept, trend, trend_uncertainty, annual/semiannual
+# amplitudes/phases and their uncertainties for every spatial pixel.
 ```
 
 Finding a spectral maximum does not by itself establish statistical significance.

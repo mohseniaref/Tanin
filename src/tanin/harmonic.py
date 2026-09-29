@@ -50,3 +50,26 @@ def test_period(data, period, dim="time", weights=None, covariance=None):
 
 def _test(t,y,period,weights=None,covariance=None):
     null=_fit_1d(t,y,(),weights,covariance); alt=_fit_1d(t,y,(period,),weights,covariance); stat,p=nested_f_test(null["rss"],alt["rss"],alt["n_observations"],2); amp=alt[f"amplitude_{period:g}"]; return amp,alt[f"phase_{period:g}"],float((null["rss"]-alt["rss"])/max(null["rss"],np.finfo(float).eps)),stat,p,float(p<0.05)
+
+def fit_geodetic(data, dim="time", annual_period=365.25, seasonal_period=182.625,
+                 weights=None, covariance=None):
+    """Fit trend, annual, and semiannual terms with delta-method uncertainties.
+
+    Returns one xarray Dataset variable per requested quantity. ``trend`` is
+    expressed in data units per day when the time coordinate is datetime-like
+    or day-valued. A common covariance matrix may be supplied for all spatial
+    series; it must correspond to the time dimension.
+    """
+    if not isinstance(data, xr.DataArray): raise TypeError("fit_geodetic requires an xarray.DataArray")
+    periods=(float(annual_period),float(seasonal_period)); t=to_decimal_days(data[dim].values); ncoef=2+2*len(periods)
+    def f(y):
+        r=_fit_1d(t,y,periods,weights=None if weights is None else np.asarray(weights),covariance=covariance)
+        beta=r["coefficients"]; V=r["coefficient_covariance"]; out=[beta[0],beta[1],np.sqrt(max(V[0,0],0)),np.sqrt(max(V[1,1],0))]
+        for i in range(len(periods)):
+            a,b=beta[2+2*i:4+2*i]; A=max(np.hypot(a,b),np.finfo(float).eps); ga=np.array([a/A,b/A]); gp=np.array([b/A**2,-a/A**2]); sub=V[2+2*i:4+2*i,2+2*i:4+2*i]
+            out.extend((A,np.arctan2(-b,a),np.sqrt(max(ga@sub@ga,0)),np.sqrt(max(gp@sub@gp,0))))
+        out.extend((r["rss"],r["n_observations"]-ncoef)); return np.asarray(out,float)
+    names=["intercept","trend","intercept_uncertainty","trend_uncertainty"]
+    for label in ("annual","seasonal"): names.extend((f"{label}_amplitude",f"{label}_phase",f"{label}_amplitude_uncertainty",f"{label}_phase_uncertainty"))
+    names.extend(("rss","degrees_of_freedom")); result=xr.apply_ufunc(f,data,input_core_dims=[[dim]],output_core_dims=[["statistic"]],vectorize=True,dask="parallelized",output_dtypes=[float],dask_gufunc_kwargs={"output_sizes":{"statistic":len(names)}})
+    return result.assign_coords(statistic=names).to_dataset(dim="statistic")
