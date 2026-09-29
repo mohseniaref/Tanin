@@ -217,6 +217,19 @@ For an InSAR cube:
 - Teunissen, P. J. G., & Amiri-Simkooei, A. R. (2008). Least-squares variance
   component estimation. *Journal of Geodesy*, 82, 65–82.
   https://doi.org/10.1007/s00190-007-0157-x
+- Amiri-Simkooei, A. R. (2007). *Least-squares variance component estimation:
+  Theory and GPS applications*. PhD thesis, Delft University of Technology,
+  Publication on Geodesy 64, Netherlands Geodetic Commission.
+- Amiri-Simkooei, A. R. (2013). On the nature of GPS draconitic year periodic
+  pattern in multivariate position time series. *Journal of Geophysical
+  Research: Solid Earth*, 118, 2500–2511.
+  https://doi.org/10.1002/jgrb.50199
+- Amiri-Simkooei, A. R. (2016). Non-negative least-squares variance component
+  estimation with application to GPS time series. *Journal of Geodesy*, 90,
+  451–466. https://doi.org/10.1007/s00190-016-0886-9
+- Amiri-Simkooei, A. R., Hosseini-Asl, M., Asgari, J., & Zangeneh-Nejad, F.
+  (2019). Offset detection in GPS position time series using multivariate
+  analysis. *GPS Solutions*, 23, 13. https://doi.org/10.1007/s10291-018-0805-z
 - Ghaderpour, E., Antonielli, B., Bozzano, F., Scarascia Mugnozza, G., &
   Mazzanti, P. (2024). A fast and robust method for detecting trend turning
   points in InSAR displacement time series. *Computers & Geosciences*, 185,

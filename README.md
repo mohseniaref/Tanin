@@ -76,3 +76,7 @@ step-matrix utilities, finite-band power-law covariance construction,
 component covariance/standard errors, non-negative estimation, w-statistics,
 and iteration diagnostics. See `examples/plot_lsvce_workflow.py` for a
 reproducible synthetic example.
+
+Additional Amiri-Simkooei references relevant to Tanin’s non-negative LS-VCE,
+periodic GPS signals, and offset detection are listed in
+[docs/theory.md](docs/theory.md).
