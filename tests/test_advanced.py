@@ -16,3 +16,5 @@ def test_cross_jump_decompose_monitor():
     assert 50 in jumps["indices"]
     assert "remainder" in tanin.just_decompose(y,t,periods=(60,))
     assert "alarms" in tanin.just_monitor(y,t,window=10)
+    wave = tanin.lscwa(x, y, t, periods=np.array([60.]))
+    assert wave["cross_power"].shape == (1, len(t))
