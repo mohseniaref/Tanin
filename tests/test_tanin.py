@@ -43,4 +43,4 @@ def test_fit_geodetic_cube_outputs_uncertainties():
     assert result.dims=={"y":2,"x":3}
     assert np.allclose(result.annual_amplitude,1,atol=1e-6)
     assert np.allclose(result.seasonal_amplitude,.3,atol=1e-6)
-    assert "trend_uncertainty" in result and "annual_phase_uncertainty" in result
+    assert "trend_variance" in result and "trend_uncertainty" in result and "annual_phase_uncertainty" in result
